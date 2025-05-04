@@ -1,6 +1,6 @@
 terraform {
   backend "gcs" {
-    bucket  = "Mozaffar-Kazemi-tfstate"
+    bucket  = "Mozaffar_Kazemi_tfstate"
     prefix  = "ga4/pipeline"
   }
 }
