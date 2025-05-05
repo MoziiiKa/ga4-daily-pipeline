@@ -1,13 +1,3 @@
-# Title
-
-## Purpose
-
-## Scope
-
-## Version
-
-
-
 # GA4 Public Dataset – Incoming File Contract & Profiling Report
 
 >- *Document owner*: **Mozaffar Kazemi** – Intern Candidate
