@@ -2,7 +2,8 @@ resource "google_storage_bucket" "landing" {
   name     = "platform_assignment_bucket"
   location = "EUROPE-WEST4"
 
-  uniform_bucket_level_access = true         # UBLA ✔
+  uniform_bucket_level_access = true         # UBLA
+
   force_destroy               = false        # protect against rm ‑rf accidents
 
   versioning {
