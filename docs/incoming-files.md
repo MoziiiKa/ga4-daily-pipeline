@@ -166,7 +166,9 @@ Full schema JSON is stored in **`docs/ga4_csv_schema.json`** for machine‑reada
    > * **Warning** – Google’s managed data‑quality service lets you set a row‑level “passing threshold” and recommends ≥ 95% rows passing as a common starting point. A 95% pass‑rate translates to a 5 % variance window before the rule flips from OK to FAIL [1][2]. So, if total rows differ from the baseline by more than **± 5 %**, Workflows raises a Slack/email alert but the load continues.
    > * **Fail** – Google’s sample anomaly‑detection pipelines (BigQuery ML `ML.DETECT_ANOMALIES`) flag data points that deviate `~2σ`, which for normally distributed row counts is roughly a 20% swing in many GA‑like datasets [3]. So, if variance exceeds **± 20 %**, the Cloud Function aborts and marks the DAG run as FAILED (mirrors Dataplex < 80% pass threshold and BigQuery‑ML anomaly‑detection norms).
 
-**References:**
+---
+
+## References
 
 1. [Auto data quality overview](https://cloud.google.com/dataplex/docs/auto-data-quality-overview)
 2. [Use auto data quality](https://cloud.google.com/dataplex/docs/use-auto-data-quality)
