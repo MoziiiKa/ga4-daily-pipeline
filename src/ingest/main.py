@@ -1,3 +1,5 @@
+import os
+import functions_framework
 from datetime import datetime, timezone
 from google.cloud import storage, logging as gcp_logging
 
@@ -9,6 +11,7 @@ storage_client = storage.Client()
 log_client     = gcp_logging.Client()
 logger         = log_client.get_logger("ingest")
 
+@functions_framework.http
 def main(request):
     # List every object and size
     bucket = storage_client.bucket(BUCKET_NAME)
