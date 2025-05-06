@@ -7,7 +7,7 @@ RAW_PREFIX  = "ga4_raw"
 
 DATASET_ID = "ga4_raw"
 TABLE_ID   = "daily_events"
-CONTRACT_JSON = Path(__file__).parents[2] / "docs" / "ga4_csv_schema.json"
+CONTRACT_JSON = Path(__file__).parents[1] / "docs" / "ga4_csv_schema.json"
 
 bq_client = bigquery.Client()
 logger = logging.getLogger("ingest")
