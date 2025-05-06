@@ -9,7 +9,7 @@ FILE_NAME   = "ga4_public_dataset.csv"
 
 storage_client = storage.Client()
 log_client     = gcp_logging.Client()
-logger         = log_client.get_logger("ingest")
+logger         = log_client.logger("ingest")
 
 @functions_framework.http
 def main(request):
