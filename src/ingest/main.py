@@ -4,6 +4,8 @@ import functions_framework
 from datetime import datetime, timedelta, timezone
 from google.cloud import storage, logging as gcp_logging
 
+from .bq_loader import load_to_bq
+
 BUCKET_NAME = "platform_assignment_bucket"
 RAW_PREFIX  = "ga4_raw"
 FILE_NAME   = "ga4_public_dataset.csv"
@@ -76,7 +78,9 @@ def main(request):
     elif delta_pct > 5:
         logger.log_text("⚠️ File size variance > 5 % — continue with warning", severity="WARNING")
 
-
+    gcs_uri = f"gs://{BUCKET_NAME}/{target_path}"
+    load_to_bq(gcs_uri)
+    logger.log_text(f"✅ Loaded to BigQuery {gcs_uri}", severity="INFO")
 
     # Return the path for downstream steps
     return {"gcs_uri": f"gs://{BUCKET_NAME}/{target_path}"}, 200
