@@ -1,0 +1,112 @@
+[
+  {
+    "mode": "NULLABLE",
+    "name": "event_date",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "event_timestamp",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "event_name",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "event_params",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "event_previous_timestamp",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "event_value_in_usd",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "event_bundle_sequence_id",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "event_server_timestamp_offset",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "user_id",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "user_pseudo_id",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "privacy_info",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "user_first_touch_timestamp",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "user_ltv",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "device",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "geo",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "app_info",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "traffic_source",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "stream_id",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "platform",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "event_dimensions",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "ecommerce",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "items",
+    "type": "STRING"
+  }
+]
