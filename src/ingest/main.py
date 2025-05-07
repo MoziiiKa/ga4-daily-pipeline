@@ -25,16 +25,16 @@ from .common import _log
 BUCKET_NAME = "platform_assignment_bucket"
 RAW_PREFIX = "ga4_raw"
 FILE_NAME = "ga4_public_dataset.csv"
+CONTRACT_BLOB = "contracts/Mozaffar_Kazemi_GA4Schema.json"
 
 storage_client = storage.Client()
 
 # ---------------------------------------------------------------------
 # Contract columns pulled from GCS
 # ---------------------------------------------------------------------
-schema_blob = storage_client.bucket(BUCKET_NAME).blob(
-    "contracts/Mozaffar_Kazemi_GA4Schema.json"
-)
-CONTRACT_COLUMNS = [c["name"] for c in json.loads(schema_blob.download_as_bytes())]
+blob = storage_client.bucket(BUCKET_NAME).blob(CONTRACT_BLOB)
+
+CONTRACT_COLUMNS = [c["name"] for c in json.loads(blob.download_as_bytes())]
 
 HEADER_REGEX = re.compile(r"^([A-Za-z0-9_]+,)+[A-Za-z0-9_]+$")
 
