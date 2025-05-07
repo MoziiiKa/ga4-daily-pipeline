@@ -96,7 +96,6 @@ def main(request):
     else:
         _log(f"{target_path} already exists — skipping copy, continuing", "INFO")
 
-
     # 3 — header validation
     header_line = target_blob.download_as_text().splitlines()[0]
     _header_matches_contract(header_line)
@@ -110,14 +109,22 @@ def main(request):
     prev_blob = bucket.blob(f"{RAW_PREFIX}/{yesterday_prefix}/{FILE_NAME}")
     prev_size = prev_blob.size if prev_blob.exists() else current_size
 
-    delta_pct = abs(current_size - prev_size) / prev_size * 100
-    _log(f"Size delta vs. yesterday: {delta_pct:.1f} %", "INFO")
+    if current_size is None:
+        target_blob.reload()
+        current_size = target_blob.size or 0
+
+    if prev_size is None:
+        prev_size = current_size
+
+    delta_pct = abs(current_size - prev_size) / prev_size * 100 if prev_size else 0
+
+    _log(f"Size delta vs. yesterday: {delta_pct:.1f} %", "INFO")
 
     if delta_pct > 20:
-        _log("Variance > 20 % — aborting", "ERROR")
+        _log("Variance > 20 % — aborting", "ERROR")
         raise RuntimeError("Abnormal file size")
     elif delta_pct > 5:
-        _log("Variance > 5 % — continuing with warning", "WARNING")
+        _log("Variance > 5 % — continuing with warning", "WARNING")
 
     # 5 — load to BigQuery
     load_to_bq(f"gs://{BUCKET_NAME}/{target_path}")
