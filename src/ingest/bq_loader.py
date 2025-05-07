@@ -1,8 +1,9 @@
-from google.cloud import bigquery
+import json
 from pathlib import Path
-import json, logging
+from google.cloud import bigquery
 
-from .main import _log
+# from .main import _log
+from .common import _log
 
 BUCKET_NAME = "platform_assignment_bucket"
 RAW_PREFIX  = "ga4_raw"

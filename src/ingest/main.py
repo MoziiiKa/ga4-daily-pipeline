@@ -2,25 +2,25 @@ import os
 import json, pathlib
 import functions_framework
 from datetime import datetime, timedelta, timezone
-from google.cloud import storage, logging as gcp_logging
-from google.cloud import logging as gcp_logging
+from google.cloud import storage
 
+from .common import _log
 from .bq_loader import load_to_bq
 
-# Improve logging
-log_client = gcp_logging.Client()
-log_handler = log_client.get_default_handler()
-logger = log_client.get_logger("ga4-ingest")   # structured logger
+# # Improve logging
+# log_client = gcp_logging.Client()
+# log_handler = log_client.get_default_handler()
+# logger = log_client.get_logger("ga4-ingest")   # structured logger
 
-def _log(msg: str, severity: str = "INFO"):
-    logger.log_struct(
-        {"message": msg},
-        severity=severity,
-        labels={
-            "component": "ingest",
-            "day": datetime.now(tz=timezone.utc).strftime("%Y-%m-%d"),
-        },
-    )
+# def _log(msg: str, severity: str = "INFO"):
+#     logger.log_struct(
+#         {"message": msg},
+#         severity=severity,
+#         labels={
+#             "component": "ingest",
+#             "day": datetime.now(tz=timezone.utc).strftime("%Y-%m-%d"),
+#         },
+#     )
 
 
 BUCKET_NAME = "platform_assignment_bucket"
@@ -28,8 +28,8 @@ RAW_PREFIX  = "ga4_raw"
 FILE_NAME   = "ga4_public_dataset.csv"
 
 storage_client = storage.Client()
-log_client     = gcp_logging.Client()
-logger         = log_client.logger("ingest")
+# log_client     = gcp_logging.Client()
+# logger         = log_client.logger("ingest")
 
 @functions_framework.http
 def main(request):
