@@ -97,8 +97,8 @@ def main(request):  # noqa: D401
         _log("No new file in drop zone", "ERROR")
         raise RuntimeError("Source file missing")
 
-    source_blob.copy_to_bucket(bucket, new_name=target_path)
-    # Optional: source_blob.delete()  # uncomment to clear drop zone
+    bucket.copy_blob(source_blob, bucket, new_name=target_path)
+    # source_blob.delete()
     _log(f"Copied {FILE_NAME} to {target_path}", "INFO")
 
     # 3 — Header validation
