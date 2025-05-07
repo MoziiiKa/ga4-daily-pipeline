@@ -24,7 +24,9 @@ Quick, step‑by‑step instructions for SREs or data engineers to re‑run or t
 3. **Trigger the Cloud Function manually** to replay load:
 
    ```bash
-   curl -X POST "https://REGION-PROJECT.cloudfunctions.net/mozaffar_kazemi_ingest"
+   curl \
+   -H "Authorization: Bearer $(gcloud auth print-identity-token)" \
+   https://europe-west4-crystalloids-candidates.cloudfunctions.net/mozaffar_kazemi_ingest
    ```
 
 ---
