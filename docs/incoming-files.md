@@ -153,6 +153,11 @@ bq --location=europe-west4 show --schema --format=prettyjson \
 
 Full schema JSON is stored in **`docs/ga4_csv_schema.json`** for machine‑readable diffing.
 
+### Modelling views
+* `Mozaffar_Kazemi_GA4Model.Mozaffar_Kazemi_DescriptiveV` – daily KPIs
+* `Mozaffar_Kazemi_GA4Model.Mozaffar_Kazemi_PageMetricsV` – flattened GA4 params
+* `Mozaffar_Kazemi_GA4Model.Mozaffar_Kazemi_TopPagesV` – top page titles
+
 ---
 
 ## 4 Validation rules (enforced by ingestion Cloud Function)
