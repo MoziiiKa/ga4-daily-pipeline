@@ -1,5 +1,5 @@
-import os
-import json, pathlib
+import json
+import pathlib
 import functions_framework
 from datetime import datetime, timedelta, timezone
 from google.cloud import storage
@@ -24,21 +24,22 @@ from .bq_loader import load_to_bq
 
 
 BUCKET_NAME = "platform_assignment_bucket"
-RAW_PREFIX  = "ga4_raw"
-FILE_NAME   = "ga4_public_dataset.csv"
+RAW_PREFIX = "ga4_raw"
+FILE_NAME = "ga4_public_dataset.csv"
 
 storage_client = storage.Client()
 # log_client     = gcp_logging.Client()
 # logger         = log_client.logger("ingest")
 
+
 @functions_framework.http
 def main(request):
     # List every object and size
     bucket = storage_client.bucket(BUCKET_NAME)
-    blob_list = list(bucket.list_blobs())          # returns Iterable[Blob]
+    blob_list = list(bucket.list_blobs())  # returns Iterable[Blob]
     for b in blob_list:
         _log(f"{b.name} — {b.size} bytes", severity="INFO")
-    
+
     # Compute & log the bucket’s “last‑updated” timestamp
     last_update = max(b.updated for b in blob_list)
     _log(f"Bucket last updated: {last_update.isoformat()}", severity="INFO")
@@ -59,7 +60,7 @@ def main(request):
         return "Exists", 200
 
     # Locate today’s drop file and copy it
-    source_blob = bucket.blob(FILE_NAME)           # root‑level drop zone
+    source_blob = bucket.blob(FILE_NAME)  # root‑level drop zone
     if not source_blob.exists():
         _log("No new file in drop zone", severity="ERROR")
         raise RuntimeError("Source file missing")
@@ -78,8 +79,8 @@ def main(request):
     _log("✅ Header matches contract", severity="INFO")
 
     # Quick volume sanity using blob.size
-    SIZE_CACHE_KEY = f"size/{today}"                 # simple in‑function cache
-    current_size = target_blob.size                  # bytes
+    # SIZE_CACHE_KEY = f"size/{today}"                 # simple in‑function cache
+    current_size = target_blob.size  # bytes
 
     # Retrieve yesterday’s size from the same prefix (if present)
     yesterday = (datetime.now(tz=timezone.utc) - timedelta(days=1)).strftime("%Y/%m/%d")
@@ -99,9 +100,8 @@ def main(request):
     load_to_bq(gcs_uri)
     _log(f"✅ Loaded to BigQuery {gcs_uri}", severity="INFO")
 
-
     _log("Ingest step finished", "INFO")
-    return ("OK", 200)        # Cloud Functions HTTP response
+    return ("OK", 200)  # Cloud Functions HTTP response
 
     # # Return the path for downstream steps
     # return {"gcs_uri": f"gs://{BUCKET_NAME}/{target_path}"}, 200

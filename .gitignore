@@ -1,2 +1,33 @@
+# Byte-compiled files and caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Build and packaging output
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Common venv names
+.venv/
 venv/
+env/
+ENV/
+
+# pytest cache
+.pytest_cache/
+
+# Ruff cache
+.ruff_cache/
+
+# Visual Studio Code
+.vscode/
+
+# Logs and temp files
+*.log
+*~
+
+# Terraform artifacts
 .terraform/
+

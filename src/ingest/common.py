@@ -6,6 +6,7 @@ log_client = gcp_logging.Client()
 log_handler = log_client.get_default_handler()
 logger = log_client.logger("ga4-ingest")  # structured logger
 
+
 def _log(msg: str, severity: str = "INFO"):
     """
     Log a structured message to Cloud Logging with a component label and current UTC day.

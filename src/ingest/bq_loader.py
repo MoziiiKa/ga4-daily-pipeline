@@ -6,14 +6,15 @@ from google.cloud import bigquery
 from .common import _log
 
 BUCKET_NAME = "platform_assignment_bucket"
-RAW_PREFIX  = "ga4_raw"
+RAW_PREFIX = "ga4_raw"
 
 DATASET_ID = "ga4_raw"
-TABLE_ID   = "daily_events"
+TABLE_ID = "daily_events"
 CONTRACT_JSON = Path(__file__).parents[1] / "docs" / "ga4_csv_schema.json"
 
 bq_client = bigquery.Client()
 # logger = logging.getLogger("ingest")
+
 
 def _ensure_dataset():
     """Create ga4_raw if it doesn't exist (idempotent)."""
@@ -22,24 +23,33 @@ def _ensure_dataset():
         bq_client.get_dataset(ds_ref)
     except Exception:
         _log("Dataset ga4_raw absent—creating.", "INFO")
-        bq_client.create_dataset(bigquery.Dataset(ds_ref), exists_ok=True)  # docs show exists_ok pattern :contentReference[oaicite:0]{index=0}
+        bq_client.create_dataset(
+            bigquery.Dataset(ds_ref), exists_ok=True
+        )  # docs show exists_ok pattern :contentReference[oaicite:0]{index=0}
+
 
 def _load_config(autodetect=True):
     job_cfg = bigquery.LoadJobConfig(
         source_format=bigquery.SourceFormat.CSV,
-        allow_quoted_newlines=True,        # fixes embedded‑JSON rows :contentReference[oaicite:1]{index=1}
+        allow_quoted_newlines=True,  # fixes embedded‑JSON rows :contentReference[oaicite:1]{index=1}
         write_disposition=bigquery.WriteDisposition.WRITE_APPEND,  # append pattern :contentReference[oaicite:2]{index=2}
         autodetect=autodetect,
-        hive_partitioning_options=bigquery.external_config.HivePartitioningOptions(
-            source_uri_prefix=f"gs://{BUCKET_NAME}/{RAW_PREFIX}/",  # maps folder dates to partitions :contentReference[oaicite:3]{index=3}
-            mode="AUTO"
-        ) if not autodetect else None
+        hive_partitioning_options=(
+            bigquery.external_config.HivePartitioningOptions(
+                source_uri_prefix=f"gs://{BUCKET_NAME}/{RAW_PREFIX}/",  # maps folder dates to partitions :contentReference[oaicite:3]{index=3}
+                mode="AUTO",
+            )
+            if not autodetect
+            else None
+        ),
     )
-    if not autodetect:                           # second run – lock explicit schema
+    if not autodetect:  # second run – lock explicit schema
         with open(CONTRACT_JSON, "r") as fp:
-            job_cfg.schema = [bigquery.SchemaField(col["name"], col["type"])
-                              for col in json.load(fp)]
+            job_cfg.schema = [
+                bigquery.SchemaField(col["name"], col["type"]) for col in json.load(fp)
+            ]
     return job_cfg
+
 
 def load_to_bq(gcs_uri: str):
     _ensure_dataset()
@@ -54,7 +64,7 @@ def load_to_bq(gcs_uri: str):
     load_job = bq_client.load_table_from_uri(gcs_uri, table_ref, job_config=job_cfg)
     load_job.result()  # blocks until done
 
-    # Capture schema after first load for drift checks
+    # Capture schema after first load for drift checks
     if not table_exists:
         schema_json = [{"name": f.name, "type": f.field_type} for f in load_job.schema]
         with open(CONTRACT_JSON, "w") as fp:
