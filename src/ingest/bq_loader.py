@@ -2,6 +2,8 @@ from google.cloud import bigquery
 from pathlib import Path
 import json, logging
 
+from .main import _log
+
 BUCKET_NAME = "platform_assignment_bucket"
 RAW_PREFIX  = "ga4_raw"
 
@@ -10,7 +12,7 @@ TABLE_ID   = "daily_events"
 CONTRACT_JSON = Path(__file__).parents[1] / "docs" / "ga4_csv_schema.json"
 
 bq_client = bigquery.Client()
-logger = logging.getLogger("ingest")
+# logger = logging.getLogger("ingest")
 
 def _ensure_dataset():
     """Create ga4_raw if it doesn't exist (idempotent)."""
@@ -18,7 +20,7 @@ def _ensure_dataset():
     try:
         bq_client.get_dataset(ds_ref)
     except Exception:
-        logger.info("Dataset ga4_raw absent—creating.")
+        _log("Dataset ga4_raw absent—creating.", "INFO")
         bq_client.create_dataset(bigquery.Dataset(ds_ref), exists_ok=True)  # docs show exists_ok pattern :contentReference[oaicite:0]{index=0}
 
 def _load_config(autodetect=True):
@@ -56,4 +58,4 @@ def load_to_bq(gcs_uri: str):
         schema_json = [{"name": f.name, "type": f.field_type} for f in load_job.schema]
         with open(CONTRACT_JSON, "w") as fp:
             json.dump(schema_json, fp, indent=2)
-        logger.info("Initial schema captured to docs/ga4_csv_schema.json")
+        _log("Initial schema captured to docs/ga4_csv_schema.json", "INFO")
