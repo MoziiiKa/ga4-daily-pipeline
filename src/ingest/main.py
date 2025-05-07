@@ -73,17 +73,29 @@ def main(request):
     target_path = _build_target_path()
     target_blob = bucket.blob(target_path)
 
-    if target_blob.exists():
-        _log(f"{target_path} already exists — aborting copy", "WARNING")
-        return "Exists", 200
+    # if target_blob.exists():
+    #     _log(f"{target_path} already exists — aborting copy", "WARNING")
+    #     return "Exists", 200
 
-    source_blob = bucket.blob(FILE_NAME)
-    if not source_blob.exists():
-        _log("Source file missing", "ERROR")
-        raise RuntimeError("No new file in drop zone")
+    # source_blob = bucket.blob(FILE_NAME)
+    # if not source_blob.exists():
+    #     _log("Source file missing", "ERROR")
+    #     raise RuntimeError("No new file in drop zone")
 
-    bucket.copy_blob(source_blob, bucket, new_name=target_path)
-    _log(f"Copied {FILE_NAME} ➜ {target_path}", "INFO")
+    # bucket.copy_blob(source_blob, bucket, new_name=target_path)
+    # _log(f"Copied {FILE_NAME} ➜ {target_path}", "INFO")
+
+    if not target_blob.exists():
+        source_blob = bucket.blob(FILE_NAME)
+        if not source_blob.exists():
+            _log("Source file missing", "ERROR")
+            raise RuntimeError("No new file in drop zone")
+
+        bucket.copy_blob(source_blob, bucket, new_name=target_path)
+        _log(f"Copied {FILE_NAME} ➜ {target_path}", "INFO")
+    else:
+        _log(f"{target_path} already exists — skipping copy, continuing", "INFO")
+
 
     # 3 — header validation
     header_line = target_blob.download_as_text().splitlines()[0]
