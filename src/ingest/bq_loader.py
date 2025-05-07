@@ -34,14 +34,14 @@ def _load_config(autodetect=True):
         allow_quoted_newlines=True,  # fixes embedded‑JSON rows :contentReference[oaicite:1]{index=1}
         write_disposition=bigquery.WriteDisposition.WRITE_APPEND,  # append pattern :contentReference[oaicite:2]{index=2}
         autodetect=autodetect,
-        hive_partitioning_options=(
-            bigquery.external_config.HivePartitioningOptions(
-                source_uri_prefix=f"gs://{BUCKET_NAME}/{RAW_PREFIX}/",  # maps folder dates to partitions :contentReference[oaicite:3]{index=3}
-                mode="AUTO",
-            )
-            if not autodetect
-            else None
-        ),
+        # hive_partitioning_options=(
+        #     bigquery.external_config.HivePartitioningOptions(
+        #         source_uri_prefix=f"gs://{BUCKET_NAME}/{RAW_PREFIX}/",  # maps folder dates to partitions :contentReference[oaicite:3]{index=3}
+        #         mode="AUTO",
+        #     )
+        #     if not autodetect
+        #     else None
+        # ),
     )
     if not autodetect:  # second run – lock explicit schema
         with open(CONTRACT_JSON, "r") as fp:
