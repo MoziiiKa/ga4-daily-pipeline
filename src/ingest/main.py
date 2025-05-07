@@ -11,7 +11,6 @@ Responsibilities
 
 import json
 import re
-from pathlib import Path
 from datetime import datetime, timedelta, timezone
 
 import functions_framework
@@ -30,20 +29,25 @@ FILE_NAME = "ga4_public_dataset.csv"
 storage_client = storage.Client()
 
 
-def _find_contract_file() -> Path:
-    """Walk up until we find docs/ga4_csv_schema.json, then return its path."""
-    cur = Path(__file__).resolve()
-    for parent in cur.parents:
-        candidate = parent / "docs" / "ga4_csv_schema.json"
-        if candidate.exists():
-            return candidate
-    raise FileNotFoundError("ga4_csv_schema.json not found in parent tree")
+# def _find_contract_file() -> Path:
+#     """Walk up until we find docs/ga4_csv_schema.json, then return its path."""
+#     cur = Path(__file__).resolve()
+#     for parent in cur.parents:
+#         candidate = parent / "docs" / "ga4_csv_schema.json"
+#         if candidate.exists():
+#             return candidate
+#     raise FileNotFoundError("ga4_csv_schema.json not found in parent tree")
 
 
 # ---- contract (22 columns) ------------------------------------------
-CONTRACT_PATH = _find_contract_file()
-with open(CONTRACT_PATH, "r", encoding="utf-8") as fp:
-    CONTRACT_COLUMNS = [c["name"] for c in json.load(fp)]
+# CONTRACT_PATH = _find_contract_file()
+# with open(CONTRACT_PATH, "r", encoding="utf-8") as fp:
+#     CONTRACT_COLUMNS = [c["name"] for c in json.load(fp)]
+
+schema_blob = storage_client.bucket(BUCKET_NAME).blob(
+    "contracts/Mozaffar_Kazemi_GA4Schema.json"
+)
+CONTRACT_COLUMNS = [c["name"] for c in json.loads(schema_blob.download_as_bytes())]
 
 HEADER_REGEX = re.compile(r"^([A-Za-z0-9_]+,)+[A-Za-z0-9_]+$")
 

@@ -1,3 +1,5 @@
+"""Unit test: BigQuery LoadJobConfig defaults"""
+
 from google.cloud import bigquery
 from src.ingest.bq_loader import _load_config
 
