@@ -10,8 +10,9 @@ Responsibilities
 """
 
 import json
-import pathlib
 import re
+import pathlib
+from pathlib import Path
 from datetime import datetime, timedelta, timezone
 
 import functions_framework
@@ -29,8 +30,17 @@ FILE_NAME = "ga4_public_dataset.csv"
 
 storage_client = storage.Client()
 
+def _find_contract_file() -> Path:
+    """Walk up until we find docs/ga4_csv_schema.json, then return its path."""
+    cur = Path(__file__).resolve()
+    for parent in cur.parents:
+        candidate = parent / "docs" / "ga4_csv_schema.json"
+        if candidate.exists():
+            return candidate
+    raise FileNotFoundError("ga4_csv_schema.json not found in parent tree")
+
 # ---- contract (22 columns) ------------------------------------------
-CONTRACT_PATH = pathlib.Path(__file__).parents[2] / "docs" / "ga4_csv_schema.json"
+CONTRACT_PATH = _find_contract_file()
 with open(CONTRACT_PATH, "r", encoding="utf-8") as fp:
     CONTRACT_COLUMNS = [c["name"] for c in json.load(fp)]
 
