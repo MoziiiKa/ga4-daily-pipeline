@@ -29,6 +29,7 @@ FILE_NAME = "ga4_public_dataset.csv"
 
 storage_client = storage.Client()
 
+
 def _find_contract_file() -> Path:
     """Walk up until we find docs/ga4_csv_schema.json, then return its path."""
     cur = Path(__file__).resolve()
@@ -37,6 +38,7 @@ def _find_contract_file() -> Path:
         if candidate.exists():
             return candidate
     raise FileNotFoundError("ga4_csv_schema.json not found in parent tree")
+
 
 # ---- contract (22 columns) ------------------------------------------
 CONTRACT_PATH = _find_contract_file()
