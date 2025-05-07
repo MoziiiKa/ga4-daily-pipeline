@@ -1,107 +1,125 @@
+"""Cloud Function v2 entry-point: GA4 daily ingest → BigQuery.
+
+Responsibilities
+‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+1.  List bucket objects; log names, sizes, last-updated timestamp.
+2.  Copy today's drop-zone file into a date-prefixed folder.
+3.  Validate header against contract + quick volume heuristic.
+4.  Load to BigQuery (helper `load_to_bq`).
+5.  Emit structured JSON logs throughout.
+"""
+
 import json
 import pathlib
-import functions_framework
+import re
 from datetime import datetime, timedelta, timezone
+
+import functions_framework
 from google.cloud import storage
 
-from .common import _log
 from .bq_loader import load_to_bq
+from .common import _log  # structured logger helper
 
-# # Improve logging
-# log_client = gcp_logging.Client()
-# log_handler = log_client.get_default_handler()
-# logger = log_client.get_logger("ga4-ingest")   # structured logger
-
-# def _log(msg: str, severity: str = "INFO"):
-#     logger.log_struct(
-#         {"message": msg},
-#         severity=severity,
-#         labels={
-#             "component": "ingest",
-#             "day": datetime.now(tz=timezone.utc).strftime("%Y-%m-%d"),
-#         },
-#     )
-
-
+# ---------------------------------------------------------------------
+# Constants & helpers
+# ---------------------------------------------------------------------
 BUCKET_NAME = "platform_assignment_bucket"
 RAW_PREFIX = "ga4_raw"
 FILE_NAME = "ga4_public_dataset.csv"
 
 storage_client = storage.Client()
-# log_client     = gcp_logging.Client()
-# logger         = log_client.logger("ingest")
+
+# ---- contract (22 columns) ------------------------------------------
+CONTRACT_PATH = pathlib.Path(__file__).parents[2] / "docs" / "ga4_csv_schema.json"
+with open(CONTRACT_PATH, "r", encoding="utf-8") as fp:
+    CONTRACT_COLUMNS = [c["name"] for c in json.load(fp)]
+
+HEADER_REGEX = re.compile(r"^([A-Za-z0-9_]+,)+[A-Za-z0-9_]+$")
 
 
-@functions_framework.http
-def main(request):
-    # List every object and size
-    bucket = storage_client.bucket(BUCKET_NAME)
-    blob_list = list(bucket.list_blobs())  # returns Iterable[Blob]
-    for b in blob_list:
-        _log(f"{b.name} — {b.size} bytes", severity="INFO")
-
-    # Compute & log the bucket’s “last‑updated” timestamp
-    last_update = max(b.updated for b in blob_list)
-    _log(f"Bucket last updated: {last_update.isoformat()}", severity="INFO")
-
-    # Build today’s prefix and target path (pre‑copy logic)
+def _build_target_path() -> str:
+    """Return partitioned key: ga4_raw/YYYY/MM/DD/ga4_public_dataset.csv"""
     today = datetime.now(tz=timezone.utc).strftime("%Y/%m/%d")
-    target_path = f"{RAW_PREFIX}/{today}/{FILE_NAME}"
+    return f"{RAW_PREFIX}/{today}/{FILE_NAME}"
+
+
+def _header_matches_contract(header_line: str) -> bool:
+    """Raise ValueError on drift; return True when header is valid."""
+    if not HEADER_REGEX.match(header_line):
+        raise ValueError("Header not comma-delimited or contains invalid chars")
+
+    cols = header_line.split(",")
+    if cols != CONTRACT_COLUMNS:
+        raise ValueError("Schema drift detected")
+    return True
+
+
+# ---------------------------------------------------------------------
+# Cloud Function entry‑point
+# ---------------------------------------------------------------------
+@functions_framework.http
+def main(request):  # noqa: D401
+    bucket = storage_client.bucket(BUCKET_NAME)
+
+    # 1 — List objects & last‑updated
+    blob_list = list(bucket.list_blobs())
+    for b in blob_list:
+        _log(f"{b.name} — {b.size} bytes", "INFO")
+
+    last_update = max(b.updated for b in blob_list)
+    _log(f"Bucket last updated: {last_update.isoformat()}", "INFO")
+
+    # 2 — Copy today’s file to date prefix
+    target_path = _build_target_path()
     target_blob = bucket.blob(target_path)
 
-    # Read the contract columns
-    CONTRACT_PATH = pathlib.Path(__file__).parents[2] / "docs" / "ga4_csv_schema.json"
-    with open(CONTRACT_PATH, "r", encoding="utf‑8") as fp:
-        CONTRACT_COLUMNS = [c["name"] for c in json.load(fp)]
-
-    # Idempotency check
     if target_blob.exists():
-        _log(f"{target_path} already exists — aborting copy", severity="WARNING")
+        _log(f"{target_path} already exists — aborting copy", "WARNING")
         return "Exists", 200
 
-    # Locate today’s drop file and copy it
-    source_blob = bucket.blob(FILE_NAME)  # root‑level drop zone
+    source_blob = bucket.blob(FILE_NAME)
     if not source_blob.exists():
-        _log("No new file in drop zone", severity="ERROR")
+        _log("No new file in drop zone", "ERROR")
         raise RuntimeError("Source file missing")
 
-    source_blob.copy_to_bucket(bucket, new_name=target_path)  # physical copy
-    # source_blob.delete()                                      # clean drop zone
-    _log(f"Copied {FILE_NAME} to {target_path}", severity="INFO")
+    source_blob.copy_to_bucket(bucket, new_name=target_path)
+    # Optional: source_blob.delete()  # uncomment to clear drop zone
+    _log(f"Copied {FILE_NAME} to {target_path}", "INFO")
 
-    # Download only the header row and do validation
+    # 3 — Header validation
     header_line = target_blob.download_as_text(max_bytes=4096).splitlines()[0]
-    file_columns = header_line.split(",")
+    try:
+        _header_matches_contract(header_line)
+        _log("✅ Header matches contract", "INFO")
+    except ValueError as err:
+        _log(str(err), "ERROR")
+        raise
 
-    if file_columns != CONTRACT_COLUMNS:
-        _log("❌ Schema drift detected", severity="ERROR")
-        raise RuntimeError("Column mismatch in daily CSV")
-    _log("✅ Header matches contract", severity="INFO")
-
-    # Quick volume sanity using blob.size
-    # SIZE_CACHE_KEY = f"size/{today}"                 # simple in‑function cache
-    current_size = target_blob.size  # bytes
-
-    # Retrieve yesterday’s size from the same prefix (if present)
-    yesterday = (datetime.now(tz=timezone.utc) - timedelta(days=1)).strftime("%Y/%m/%d")
-    prev_blob = bucket.blob(f"{RAW_PREFIX}/{yesterday}/{FILE_NAME}")
+    # Quick volume heuristic (±5 % warn, ±20 % fail)
+    current_size = target_blob.size
+    yesterday_prefix = (datetime.now(tz=timezone.utc) - timedelta(days=1)).strftime(
+        "%Y/%m/%d"
+    )
+    prev_blob = bucket.blob(f"{RAW_PREFIX}/{yesterday_prefix}/{FILE_NAME}")
     prev_size = prev_blob.size if prev_blob.exists() else current_size
 
     delta_pct = abs(current_size - prev_size) / prev_size * 100
-    _log(f"Size delta vs. yesterday: {delta_pct:.1f} %", severity="INFO")
+    _log(f"Size delta vs. yesterday: {delta_pct:.1f} %", "INFO")
 
     if delta_pct > 20:
-        _log("❌ File size variance > 20 % — abort", severity="ERROR")
+        _log("❌ File size variance > 20 % — abort", "ERROR")
         raise RuntimeError("Abnormal file size; load stopped")
     elif delta_pct > 5:
-        _log("⚠️ File size variance > 5 % — continue with warning", severity="WARNING")
+        _log("⚠️ File size variance > 5 % — continue with warning", "WARNING")
 
+    # 4 — Load to BigQuery
     gcs_uri = f"gs://{BUCKET_NAME}/{target_path}"
     load_to_bq(gcs_uri)
-    _log(f"✅ Loaded to BigQuery {gcs_uri}", severity="INFO")
+    _log(f"✅ Loaded to BigQuery {gcs_uri}", "INFO")
 
+    # 5 — Success exit
     _log("Ingest step finished", "INFO")
-    return ("OK", 200)  # Cloud Functions HTTP response
+    return "OK", 200
 
     # # Return the path for downstream steps
     # return {"gcs_uri": f"gs://{BUCKET_NAME}/{target_path}"}, 200
