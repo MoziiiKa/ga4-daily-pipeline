@@ -19,7 +19,7 @@ from google.cloud import storage
 from .bq_loader import load_to_bq
 from .common import _log
 
-from config import BUCKET_NAME, RAW_PREFIX, FILE_NAME, CONTRACT_BLOB
+from .config import BUCKET_NAME, RAW_PREFIX, FILE_NAME, CONTRACT_BLOB
 
 # ---------------------------------------------------------------------
 # Constants

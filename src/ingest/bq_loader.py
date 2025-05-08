@@ -4,7 +4,7 @@ import json
 from google.cloud import bigquery, storage
 from .common import _log
 
-from config import BUCKET_NAME, CONTRACT_BLOB, DATASET_ID, TABLE_ID
+from .config import BUCKET_NAME, CONTRACT_BLOB, DATASET_ID, TABLE_ID
 
 # ---------------------------------------------------------------------
 # Constants
