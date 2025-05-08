@@ -2,21 +2,23 @@
 
 main:
   steps:
+    # step 1: call the ingest function, wrapped in a try/retry block
     - call_ingest:
         try:
           call: http.post
           args:
-            url: ${INGEST_URL}
+            url: ${sys.get_env("INGEST_URL")}      # pull from ENV
             auth:
               type: OIDC
           result: ingest_response
         retry:
-          predicate: ${http.default_retry_predicate}   # retry on 5xx, 429, etc. 
-          max_retries: 5                                # up to 5 attempts total 
+          predicate: ${http.default_retry_predicate}  
+          max_retries: 5                              # up to 5 attempts
           backoff:
-            initial_delay: 10                           # wait 10 s before 2nd try 
-            max_delay: 60                               # cap wait at 60 s 
-            multiplier: 2                               # exponential backoff multiplier 
+            initial_delay: 10                         # seconds before 2nd try
+            max_delay: 60                             # cap at 60 s
+            multiplier: 2                             # exponential backoff
 
+    # step 2: return success if no errors
     - success_log:
         return: "load-ok"
