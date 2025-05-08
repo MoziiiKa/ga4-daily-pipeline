@@ -1,33 +1,24 @@
 CREATE OR REPLACE VIEW `Mozaffar_Kazemi_GA4Model.Mozaffar_Kazemi_PageMetricsV` AS
-WITH flat AS (
-  SELECT
-    -- convert YYYYMMDD int to DATE
-    PARSE_DATE('%Y%m%d', CAST(event_date AS STRING)) AS event_date,
+SELECT
+  -- Convert YYYYMMDD int to DATE
+  PARSE_DATE('%Y%m%d', CAST(event_date AS STRING)) AS event_date,
 
-    -- unnest the actual array under the "event_params" field
-    (SELECT 
-       JSON_EXTRACT_SCALAR(param, '$.value.string_value')
-     FROM UNNEST(
-       JSON_EXTRACT_ARRAY(event_params, '$.event_params')
-     ) AS param
-     WHERE JSON_EXTRACT_SCALAR(param, '$.key') = 'page_title'
-    ) AS page_title,
+  -- Extract the page_title string from the JSON array under event_params
+  (SELECT
+     JSON_EXTRACT_SCALAR(param, '$.value.string_value')
+   FROM UNNEST(JSON_EXTRACT_ARRAY(event_params, '$.event_params')) AS param
+   WHERE JSON_EXTRACT_SCALAR(param, '$.key') = 'page_title'
+  ) AS page_title,
 
-    CAST(
-      (SELECT 
-         JSON_EXTRACT_SCALAR(param, '$.value.int_value')
-       FROM UNNEST(
-         JSON_EXTRACT_ARRAY(event_params, '$.event_params')
-       ) AS param
-       WHERE JSON_EXTRACT_SCALAR(param, '$.key') = 'page_view'
-      ) AS INT64
-    ) AS page_views
+  -- Every page_view event counts as 1
+  1 AS page_view_count
 
-  FROM
-    `crystalloids-candidates.Mozaffar_Kazemi_GA4Raw.Mozaffar_Kazemi_DailyEvents`
-  WHERE
-    event_name = 'page_view'
-)
-SELECT *
-FROM flat
-WHERE page_title IS NOT NULL;
+FROM
+  `crystalloids-candidates.Mozaffar_Kazemi_GA4Raw.Mozaffar_Kazemi_DailyEvents`
+WHERE
+  event_name = 'page_view'
+  AND JSON_EXTRACT_SCALAR(
+        (SELECT p FROM UNNEST(JSON_EXTRACT_ARRAY(event_params, '$.event_params')) AS p 
+         WHERE JSON_EXTRACT_SCALAR(p, '$.key') = 'page_title'
+        ), '$.value.string_value'
+      ) IS NOT NULL;
