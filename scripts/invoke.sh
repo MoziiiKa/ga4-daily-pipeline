@@ -12,7 +12,7 @@ FUNCTION_URL="https://${REGION}-${PROJECT_ID}.cloudfunctions.net/${FUNCTION_NAME
 
 echo "👉 Invoking ${FUNCTION_NAME} at ${FUNCTION_URL}…"
 
-curl -v \
+curl -sS \
   -H "Authorization: Bearer $(gcloud auth print-identity-token --project=${PROJECT_ID})" \
   "${FUNCTION_URL}"
 
