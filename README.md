@@ -172,8 +172,8 @@ Detailed docs in `docs/`:
 - [Data Contract & Validation](docs/incoming-files.md)
 - [Run-book & Backfill](docs/runbook_ingest.md)
 - [Scheduler & Workflow](docs/schedule.md)
-- [Top 5 Challenges & Solutions](docs/challenges.md)
 - [Implementation Summary](docs/implementation_summary.md)
+- [Top 5 Challenges & Solutions](docs/challenges.md)
 - [Future Work & Potential Improvements](docs/future_work.md)
 
 ---
