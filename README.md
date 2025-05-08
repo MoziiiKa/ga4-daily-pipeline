@@ -169,6 +169,13 @@ Detailed docs in `docs/`:
 * **schedule.md**: workflow & scheduler config
 * **runbook\_ingest.md**: backfill & troubleshooting
 
+- [Data Contract & Validation](docs/incoming-files.md)
+- [Run-book & Backfill](docs/runbook_ingest.md)
+- [Scheduler & Workflow](docs/schedule.md)
+- [Top 5 Challenges & Solutions](docs/challenges.md)
+- [Implementation Summary](docs/implementation_summary.md)
+- [Future Work & Potential Improvements](docs/future_work.md)
+
 ---
 
 ## Contributing
@@ -183,3 +190,5 @@ Detailed docs in `docs/`:
 ## License
 
 MIT © Crystalloids
+
+---

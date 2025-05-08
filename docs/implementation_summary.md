@@ -156,3 +156,4 @@ Here’s the **complete, chronological run-book** of everything I’ve done—st
     * **Workflows Executions** tab logs the `call_ingest` step, structured logs, and no errors.
     * **BQ UI** confirms fresh rows in `Mozaffar_Kazemi_GA4Raw.DailyEvents` and that the three modelling views return expected data.
 
+---
