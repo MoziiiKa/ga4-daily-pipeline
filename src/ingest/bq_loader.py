@@ -61,6 +61,7 @@ def _load_config(autodetect: bool) -> bigquery.LoadJobConfig:
         allow_quoted_newlines=True,
         write_disposition=bigquery.WriteDisposition.WRITE_APPEND,
         autodetect=autodetect,
+        skip_leading_rows=1,  # SKIP HEADER ROW
     )
     if not autodetect:
         # explicit schema for subsequent runs
