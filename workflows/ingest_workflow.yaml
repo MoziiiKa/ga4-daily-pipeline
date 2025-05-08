@@ -3,17 +3,20 @@
 main:
   steps:
     - call_ingest:
-        call: http.post
-        args:
-          url: ${INGEST_URL}
-          auth:
-            type: OIDC
+        try:
+          call: http.post
+          args:
+            url: ${INGEST_URL}
+            auth:
+              type: OIDC
+          result: ingest_response
         retry:
-          max_retries: 5               # total retry attempts
+          predicate: ${http.default_retry_predicate}   # retry on 5xx, 429, etc. 
+          max_retries: 5                                # up to 5 attempts total 
           backoff:
-            initial_delay: 10          # seconds before 1st retry
-            max_delay: 60              # cap backoff at 60 s
-            multiplier: 2              # exponential backoff multiplier
+            initial_delay: 10                           # wait 10 s before 2nd try 
+            max_delay: 60                               # cap wait at 60 s 
+            multiplier: 2                               # exponential backoff multiplier 
 
     - success_log:
         return: "load-ok"
