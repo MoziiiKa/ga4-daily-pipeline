@@ -9,10 +9,11 @@ main:
           auth:
             type: OIDC
         retry:
-          maxAttempts: 5        # as per assignment §14
+          max_retries: 5               # total retry attempts
           backoff:
-            initialDelay: 10s
-            maxDelay: 60s
-            multiplier: 2
+            initial_delay: 10          # seconds before 1st retry
+            max_delay: 60              # cap backoff at 60 s
+            multiplier: 2              # exponential backoff multiplier
+
     - success_log:
         return: "load-ok"
