@@ -19,13 +19,15 @@ from google.cloud import storage
 from .bq_loader import load_to_bq
 from .common import _log
 
+from config import BUCKET_NAME, RAW_PREFIX, FILE_NAME, CONTRACT_BLOB
+
 # ---------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------
-BUCKET_NAME = "platform_assignment_bucket"
-RAW_PREFIX = "ga4_raw"
-FILE_NAME = "ga4_public_dataset.csv"
-CONTRACT_BLOB = "contracts/Mozaffar_Kazemi_GA4Schema.json"
+# BUCKET_NAME = "platform_assignment_bucket"
+# RAW_PREFIX = "ga4_raw"
+# FILE_NAME = "ga4_public_dataset.csv"
+# CONTRACT_BLOB = "contracts/Mozaffar_Kazemi_GA4Schema.json"
 
 storage_client = storage.Client()
 
@@ -67,34 +69,22 @@ def main(request):
     blob_list = list(bucket.list_blobs())
     for b in blob_list:
         _log(f"{b.name} — {b.size} bytes", "INFO")
-    _log(f"Bucket last updated: {max(b.updated for b in blob_list)}", "INFO")
+    _log(f"➖ Bucket last updated: {max(b.updated for b in blob_list)}", "INFO")
 
     # 2 — copy today’s file into date partition
     target_path = _build_target_path()
     target_blob = bucket.blob(target_path)
 
-    # if target_blob.exists():
-    #     _log(f"{target_path} already exists — aborting copy", "WARNING")
-    #     return "Exists", 200
-
-    # source_blob = bucket.blob(FILE_NAME)
-    # if not source_blob.exists():
-    #     _log("Source file missing", "ERROR")
-    #     raise RuntimeError("No new file in drop zone")
-
-    # bucket.copy_blob(source_blob, bucket, new_name=target_path)
-    # _log(f"Copied {FILE_NAME} ➜ {target_path}", "INFO")
-
     if not target_blob.exists():
         source_blob = bucket.blob(FILE_NAME)
         if not source_blob.exists():
-            _log("Source file missing", "ERROR")
+            _log("🚨 Source file missing", "ERROR")
             raise RuntimeError("No new file in drop zone")
 
         bucket.copy_blob(source_blob, bucket, new_name=target_path)
-        _log(f"Copied {FILE_NAME} ➜ {target_path}", "INFO")
+        _log(f"➖ Copied {FILE_NAME} ➜ {target_path}", "INFO")
     else:
-        _log(f"{target_path} already exists — skipping copy, continuing", "INFO")
+        _log(f"➖ {target_path} already exists — skipping copy, continuing", "INFO")
 
     # 3 — header validation
     header_line = target_blob.download_as_text().splitlines()[0]
@@ -118,7 +108,7 @@ def main(request):
 
     delta_pct = abs(current_size - prev_size) / prev_size * 100 if prev_size else 0
 
-    _log(f"Size delta vs. yesterday: {delta_pct:.1f} %", "INFO")
+    _log(f"➖ Size delta vs. yesterday: {delta_pct:.1f} %", "INFO")
 
     if delta_pct > 20:
         _log("Variance > 20 % — aborting", "ERROR")
@@ -130,7 +120,4 @@ def main(request):
     load_to_bq(f"gs://{BUCKET_NAME}/{target_path}")
     _log("✅ Loaded to BigQuery", "INFO")
 
-    return "OK", 200
-
-    # # Return the path for downstream steps
-    # return {"gcs_uri": f"gs://{BUCKET_NAME}/{target_path}"}, 200
+    return "Loaded to BigQuery successfuly!", 200
