@@ -1,0 +1,18 @@
+# workflows/ingest_workflow.yaml
+
+main:
+  steps:
+    - call_ingest:
+        call: http.post
+        args:
+          url: ${INGEST_URL}
+          auth:
+            type: OIDC
+        retry:
+          maxAttempts: 5        # as per assignment §14
+          backoff:
+            initialDelay: 10s
+            maxDelay: 60s
+            multiplier: 2
+    - success_log:
+        return: "load-ok"
