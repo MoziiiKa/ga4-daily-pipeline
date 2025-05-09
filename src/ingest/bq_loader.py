@@ -1,21 +1,17 @@
 """BigQuery loader helper for GA4 daily pipeline."""
 
 import json
-from google.cloud import bigquery, storage
+from google.cloud import bigquery
 from .common import _log
 
-from .config import BUCKET_NAME, CONTRACT_BLOB, DATASET_ID, TABLE_ID
-
-# ---------------------------------------------------------------------
-# Constants
-# ---------------------------------------------------------------------
-# BUCKET_NAME    = "platform_assignment_bucket"
-# CONTRACT_BLOB  = "contracts/Mozaffar_Kazemi_GA4Schema.json"
-# DATASET_ID     = "Mozaffar_Kazemi_GA4Raw"
-# TABLE_ID       = "Mozaffar_Kazemi_DailyEvents"
-
-bq_client = bigquery.Client()
-storage_client = storage.Client()
+from .config import (
+    BUCKET_NAME,
+    CONTRACT_BLOB,
+    DATASET_ID,
+    TABLE_ID,
+    storage_client,
+    bq_client,
+)
 
 
 # ---------------------------------------------------------------------

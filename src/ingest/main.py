@@ -10,51 +10,57 @@ Responsibilities
 """
 
 import json
-import re
 from datetime import datetime, timedelta, timezone
 
 import functions_framework
-from google.cloud import storage
 
 from .bq_loader import load_to_bq
 from .common import _log
 
-from .config import BUCKET_NAME, RAW_PREFIX, FILE_NAME, CONTRACT_BLOB
-
-# ---------------------------------------------------------------------
-# Constants
-# ---------------------------------------------------------------------
-# BUCKET_NAME = "platform_assignment_bucket"
-# RAW_PREFIX = "ga4_raw"
-# FILE_NAME = "ga4_public_dataset.csv"
-# CONTRACT_BLOB = "contracts/Mozaffar_Kazemi_GA4Schema.json"
-
-storage_client = storage.Client()
-
-# ---------------------------------------------------------------------
-# Contract columns pulled from GCS
-# ---------------------------------------------------------------------
-blob = storage_client.bucket(BUCKET_NAME).blob(CONTRACT_BLOB)
-
-CONTRACT_COLUMNS = [c["name"] for c in json.loads(blob.download_as_bytes())]
-
-HEADER_REGEX = re.compile(r"^([A-Za-z0-9_]+,)+[A-Za-z0-9_]+$")
+from .config import (
+    BUCKET_NAME,
+    RAW_PREFIX,
+    FILE_NAME,
+    CONTRACT_BLOB,
+    storage_client,
+    HEADER_REGEX,
+)
 
 
 # ---------------------------------------------------------------------
 # Helper functions
 # ---------------------------------------------------------------------
+
+
+def _load_contract_columns():
+    """Fetch schema JSON from GCS and return the list of column names."""
+    bucket = storage_client.bucket(BUCKET_NAME)
+    blob = bucket.blob(CONTRACT_BLOB)
+    data = blob.download_as_bytes()
+    return [c["name"] for c in json.loads(data)]
+
+
 def _build_target_path() -> str:
     today = datetime.now(tz=timezone.utc).strftime("%Y/%m/%d")
     return f"{RAW_PREFIX}/{today}/{FILE_NAME}"
 
 
-def _header_matches_contract(header_line: str) -> bool:
-    if not HEADER_REGEX.match(header_line):
-        raise ValueError("Header not comma‑delimited or contains invalid chars")
+def _header_matches_contract(header: str, *, columns=None):
+    """
+    Returns True if `header` (a CSV header line) exactly matches
+    the contract columns. Raises ValueError on mismatch.
+    """
+    # Validate basic format
+    if not HEADER_REGEX.match(header):
+        raise ValueError(f"Invalid header format: {header}")
 
-    if header_line.split(",") != CONTRACT_COLUMNS:
-        raise ValueError("Schema drift detected")
+    # Load or use provided schema columns
+    if columns is None:
+        columns = _load_contract_columns()
+    header_cols = header.split(",")
+
+    if header_cols != columns:
+        raise ValueError(f"Header columns {header_cols} do not match schema {columns}")
     return True
 
 
