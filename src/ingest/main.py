@@ -28,23 +28,22 @@ from .config import (
 
 
 # ---------------------------------------------------------------------
-# CONTRACT_COLUMNS: define only if not already defined (for test overrides)
+# Lazy-loaded contract schema columns
 # ---------------------------------------------------------------------
 
-if "CONTRACT_COLUMNS" not in globals():
-    CONTRACT_COLUMNS = None
-
-# Load schema JSON from GCS if CONTRACT_COLUMNS isn't provided (production)
-if not isinstance(CONTRACT_COLUMNS, list):
-    blob = storage_client.bucket(BUCKET_NAME).blob(CONTRACT_BLOB)
-    data = blob.download_as_bytes()
-    CONTRACT_COLUMNS = [c["name"] for c in json.loads(data)]
+CONTRACT_COLUMNS = None
 
 
 # ---------------------------------------------------------------------
 # Helper functions
 # ---------------------------------------------------------------------
 
+
+def _load_contract_columns() -> list[str]:
+    """Fetch the JSON schema from GCS and return a list of column names."""
+    blob = storage_client.bucket(BUCKET_NAME).blob(CONTRACT_BLOB)
+    data = blob.download_as_bytes()
+    return [c['name'] for c in json.loads(data)]
 
 def _build_target_path() -> str:
     """
@@ -55,22 +54,28 @@ def _build_target_path() -> str:
     return f"{RAW_PREFIX}/{today}/{FILE_NAME}"
 
 
-def _header_matches_contract(header: str, *, columns=None):
+def _header_matches_contract(header: str, *, columns=None) -> bool:
     """
-    Returns True if `header` (a CSV header line) exactly matches
-    the contract columns. Raises ValueError on mismatch.
+    Check the CSV header line against expected contract columns.
+    Raises ValueError if format or schema mismatch.
     """
-    # Validate basic format
+    # 1. Validate basic CSV header format
     if not HEADER_REGEX.match(header):
         raise ValueError(f"Invalid header format: {header}")
 
-    # Load or use provided schema columns
+    # 2. Determine schema columns
+    global CONTRACT_COLUMNS
     if columns is None:
+        if CONTRACT_COLUMNS is None:
+            CONTRACT_COLUMNS = _load_contract_columns()
         columns = CONTRACT_COLUMNS
 
+    # 3. Compare header names
     header_cols = header.split(",")
     if header_cols != columns:
-        raise ValueError(f"Header columns {header_cols} do not match schema {columns}")
+        raise ValueError(
+            f"Header columns {header_cols} do not match schema {columns}"
+        )
     return True
 
 
