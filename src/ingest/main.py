@@ -43,7 +43,8 @@ def _load_contract_columns() -> list[str]:
     """Fetch the JSON schema from GCS and return a list of column names."""
     blob = storage_client.bucket(BUCKET_NAME).blob(CONTRACT_BLOB)
     data = blob.download_as_bytes()
-    return [c['name'] for c in json.loads(data)]
+    return [c["name"] for c in json.loads(data)]
+
 
 def _build_target_path() -> str:
     """
@@ -73,9 +74,7 @@ def _header_matches_contract(header: str, *, columns=None) -> bool:
     # 3. Compare header names
     header_cols = header.split(",")
     if header_cols != columns:
-        raise ValueError(
-            f"Header columns {header_cols} do not match schema {columns}"
-        )
+        raise ValueError(f"Header columns {header_cols} do not match schema {columns}")
     return True
 
 
