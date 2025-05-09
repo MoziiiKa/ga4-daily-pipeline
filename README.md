@@ -104,13 +104,35 @@ ga4-daily-pipeline/
 
 
 2. **Deploy Cloud Function**:
+
+   Simply run below script:
+
+    ```bash
+    ./scripts/deploy.sh
+    ```
+    or
+
     ```bash
     cd src/ingest
     gcloud functions deploy mozaffar_kazemi_ingest \
     --gen2 --runtime=python312 --region=europe-west4 \
     --entry-point=main --source=. \
-    --service-account=platform-terraform-service-acc@crystalloids-candidates.iam.gserviceaccount.com \
+    --service-account=crystalloids-candidates@appspot.gserviceaccount.com \
     --trigger-http --allow-unauthenticated --min-instances=0
+    ```
+
+    To trigger the function you can simply run below script:
+
+    ```bash
+    ./scripts/invoke.sh
+    ```
+
+    or
+
+    ```bash
+    curl \
+      -H "Authorization: Bearer $(gcloud auth print-identity-token)" \
+      https://europe-west4-crystalloids-candidates.cloudfunctions.net/mozaffar_kazemi_ingest
     ```
 
 3. **Deploy Workflow**:
