@@ -31,7 +31,9 @@ from .config import (
 # Lazy-loaded contract schema columns
 # ---------------------------------------------------------------------
 
-CONTRACT_COLUMNS = None
+# Only initialize if not already set (so reload() won't wipe out a test patch)
+if "CONTRACT_COLUMNS" not in globals():
+    CONTRACT_COLUMNS = None
 
 
 # ---------------------------------------------------------------------
