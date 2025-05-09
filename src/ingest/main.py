@@ -32,15 +32,20 @@ from .config import (
 # ---------------------------------------------------------------------
 
 
-def _load_contract_columns():
-    """Fetch schema JSON from GCS and return the list of column names."""
-    bucket = storage_client.bucket(BUCKET_NAME)
-    blob = bucket.blob(CONTRACT_BLOB)
+CONTRACT_COLUMNS = None
+
+# Load schema JSON from GCS when CONTRACT_COLUMNS is not set (e.g., in production)
+if CONTRACT_COLUMNS is None:
+    blob = storage_client.bucket(BUCKET_NAME).blob(CONTRACT_BLOB)
     data = blob.download_as_bytes()
-    return [c["name"] for c in json.loads(data)]
+    CONTRACT_COLUMNS = [c["name"] for c in json.loads(data)]
 
 
 def _build_target_path() -> str:
+    """
+    Build the GCS target path for today's file under RAW_PREFIX.
+    Format: {RAW_PREFIX}/YYYY/MM/DD/{FILE_NAME}
+    """
     today = datetime.now(tz=timezone.utc).strftime("%Y/%m/%d")
     return f"{RAW_PREFIX}/{today}/{FILE_NAME}"
 
@@ -56,9 +61,9 @@ def _header_matches_contract(header: str, *, columns=None):
 
     # Load or use provided schema columns
     if columns is None:
-        columns = _load_contract_columns()
-    header_cols = header.split(",")
+        columns = CONTRACT_COLUMNS
 
+    header_cols = header.split(",")
     if header_cols != columns:
         raise ValueError(f"Header columns {header_cols} do not match schema {columns}")
     return True

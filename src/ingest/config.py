@@ -12,7 +12,7 @@ CONTRACT_BLOB = os.getenv("CONTRACT_BLOB", "contracts/Mozaffar_Kazemi_GA4Schema.
 DATASET_ID = os.getenv("DATASET_ID", "Mozaffar_Kazemi_GA4Raw")
 TABLE_ID = os.getenv("TABLE_ID", "Mozaffar_Kazemi_DailyEvents")
 
-# Header regex for CSV validation
+# Regex to validate a CSV header line (e.g. col1,col2,...,colN)
 HEADER_REGEX = re.compile(r"^([A-Za-z0-9_]+,)+[A-Za-z0-9_]+$")
 
 # GC clients
