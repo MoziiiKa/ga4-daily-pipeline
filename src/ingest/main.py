@@ -28,18 +28,22 @@ from .config import (
 
 
 # ---------------------------------------------------------------------
-# Helper functions
+# CONTRACT_COLUMNS: define only if not already defined (for test overrides)
 # ---------------------------------------------------------------------
 
+if 'CONTRACT_COLUMNS' not in globals():
+    CONTRACT_COLUMNS = None
 
-CONTRACT_COLUMNS = None
-
-# Load schema JSON from GCS when CONTRACT_COLUMNS is not set (e.g., in production)
-if CONTRACT_COLUMNS is None:
+# Load schema JSON from GCS if CONTRACT_COLUMNS isn't provided (production)
+if not isinstance(CONTRACT_COLUMNS, list):
     blob = storage_client.bucket(BUCKET_NAME).blob(CONTRACT_BLOB)
     data = blob.download_as_bytes()
-    CONTRACT_COLUMNS = [c["name"] for c in json.loads(data)]
+    CONTRACT_COLUMNS = [c['name'] for c in json.loads(data)]
 
+
+# ---------------------------------------------------------------------
+# Helper functions
+# ---------------------------------------------------------------------
 
 def _build_target_path() -> str:
     """
